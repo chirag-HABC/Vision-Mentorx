@@ -9,14 +9,10 @@ function HumanoidAvatar({ isSpeaking, modelPath = null, faceTextureUrl = null, p
   const [faceTexture, setFaceTexture] = useState(null);
   const [textureError, setTextureError] = useState(false);
   const [modelError, setModelError] = useState(false);
-  
-  // Try to load model, but don't crash if it fails
-  let gltf = null;
-  try {
-    gltf = modelPath ? useGLTF(modelPath, true) : null;
-  } catch (e) {
-    setModelError(true);
-  }
+
+  // Load GLTF unconditionally — React Hooks must be called in the same order every render.
+  // If modelPath is null/invalid, drei's useGLTF will simply not load anything.
+  const gltf = modelPath ? useGLTF(modelPath, true) : null;
 
   useEffect(() => {
     if (!faceTextureUrl) {
@@ -82,7 +78,10 @@ function HumanoidAvatar({ isSpeaking, modelPath = null, faceTextureUrl = null, p
     if (gltf && gltf.scene && faceTexture) {
       gltf.scene.traverse((child) => {
         if (child.isMesh) {
-          if (child.name.toLowerCase().includes("face") || child.name.toLowerCase().includes("head")) {
+          if (
+            child.name.toLowerCase().includes("face") ||
+            child.name.toLowerCase().includes("head")
+          ) {
             child.material.map = faceTexture;
             child.material.needsUpdate = true;
           }
@@ -105,11 +104,11 @@ function HumanoidAvatar({ isSpeaking, modelPath = null, faceTextureUrl = null, p
           {/* Head */}
           <mesh position={[0, 0.4, 0]}>
             <sphereGeometry args={[0.5, 64, 64]} />
-            <meshStandardMaterial 
-              color={faceTexture ? "#fff" : (textureError ? "#f2c2b7" : "#f5dfc7")} 
+            <meshStandardMaterial
+              color={faceTexture ? "#fff" : textureError ? "#f2c2b7" : "#f5dfc7"}
               map={faceTexture}
-              metalness={0.1} 
-              roughness={0.6} 
+              metalness={0.1}
+              roughness={0.6}
             />
           </mesh>
 
@@ -126,11 +125,19 @@ function HumanoidAvatar({ isSpeaking, modelPath = null, faceTextureUrl = null, p
           {/* Eye pupils */}
           <mesh position={[-0.15, 0.55, 0.52]}>
             <sphereGeometry args={[0.04, 16, 16]} />
-            <meshStandardMaterial color="#66ccff" emissive="#0088ff" emissiveIntensity={0.6} />
+            <meshStandardMaterial
+              color="#66ccff"
+              emissive="#0088ff"
+              emissiveIntensity={0.6}
+            />
           </mesh>
           <mesh position={[0.15, 0.55, 0.52]}>
             <sphereGeometry args={[0.04, 16, 16]} />
-            <meshStandardMaterial color="#66ccff" emissive="#0088ff" emissiveIntensity={0.6} />
+            <meshStandardMaterial
+              color="#66ccff"
+              emissive="#0088ff"
+              emissiveIntensity={0.6}
+            />
           </mesh>
 
           {/* Nose */}
@@ -174,9 +181,22 @@ function HumanoidAvatar({ isSpeaking, modelPath = null, faceTextureUrl = null, p
   );
 }
 
-function Avatar3D({ isSpeaking = false, modelPath = null, faceTextureUrl = null, pose = null, lipSync = 0 }) {
+function Avatar3D({
+  isSpeaking = false,
+  modelPath = null,
+  faceTextureUrl = null,
+  pose = null,
+  lipSync = 0,
+}) {
   return (
-    <Canvas style={{ height: "400px", width: "500px", border: "1px solid #ccc", borderRadius: "8px" }}>
+    <Canvas
+      style={{
+        height: "400px",
+        width: "500px",
+        border: "1px solid #ccc",
+        borderRadius: "8px",
+      }}
+    >
       <ambientLight intensity={0.7} />
       <directionalLight position={[5, 5, 5]} intensity={1.2} />
       <pointLight position={[-5, 5, 5]} intensity={0.6} />
